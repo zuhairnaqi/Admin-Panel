@@ -1,5 +1,8 @@
 import React, { Component, lazy, Suspense } from 'react';
 import firebase from '../Config/Firebase';
+import { Button, FormControl, Form, Table, Col } from 'react-bootstrap';
+
+var db = firebase.firestore();
 
 const cors = "https://cors-anywhere.herokuapp.com/";
 const MANGA_LIST = "https://www.mangaeden.com/api/list/0/";
@@ -7,6 +10,15 @@ const MANGA_DETAIL = "https://www.mangaeden.com/api/manga/";
 const CHAPTERLIST = "https://www.mangaeden.com/api/chapter/";
 
 var db = firebase.firestore();
+// Disable deprecated features
+db.settings({
+  timestampsInSnapshots: true
+});
+
+
+
+var searchTimeout = "";
+var chapterQuantity = 0;
 
 class Dashboard extends Component {
   constructor(props) {
@@ -14,12 +26,15 @@ class Dashboard extends Component {
     this.state = {
       mangaId: [],
       chaptersId: [],
-      chp : []
+      chp: [],
+      AllData: [],
+      searchText: '',
+      filterList: [],
     }
   }
 
 
-  // FOR UPLOAD MANGA DETAILS TO FIREBASE 
+  // FOR UPLOAD Chapter Images TO FIREBASE 
   // componentDidMount() {
   //   const { chp } = this.state;
   //   db.collection("MANGA_DETAIL").orderBy("alias").get()
@@ -43,7 +58,7 @@ class Dashboard extends Component {
 
   // UploadToFirebase = async() => {
   //   const { chp } = this.state;
-  //   for (let i = 0; i < chp.length; i++) {
+  //   for (let i = 998; i < chp.length; i++) {
   //       // const element = chapterList[i].chapters[j][3];
   //       await new Promise(resolve => setTimeout(resolve, 1200));
   //       const element = chp[i];
@@ -67,18 +82,133 @@ class Dashboard extends Component {
   // }
 
 
+  componentDidMount() {
+    const { AllData } = this.state;
+
+    db.collection("MANGA_DETAIL").get()
+      .then(querySnapshot => {
+        querySnapshot.forEach(doc => {
+          var data = doc.data();
+          AllData.push(data);
+          chapterQuantity = chapterQuantity + data.chapters_len;
+        });
+        console.log(chapterQuantity);
+        if (JSON.parse(localStorage.getItem("AllMangaDetails")).length < AllData.length) {
+          localStorage.setItem("AllMangaDetails", JSON.stringify(AllData));
+          localStorage.setItem("chapterQuantity", JSON.stringify(chapterQuantity));
+          this.setState({ AllData })
+        }
+      })
+      .catch(error => {
+        console.log("Error getting documents: ", error);
+      });
+  }
+
+  componentWillMount() {
+    if (localStorage.getItem("AllMangaDetails") && localStorage.getItem("chapterQuantity")) {
+      var AllData = JSON.parse(localStorage.getItem("AllMangaDetails"));
+      chapterQuantity = parseInt(localStorage.getItem("chapterQuantity"));
+      console.log(AllData);
+      console.log(chapterQuantity);
+      this.setState({ AllData });
+    }
+  }
+
+  SearchingStuff = (event) => {
+    event.preventDefault();
+    var value = event.target.value;
+    clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(() => {
+      this.searching(value);
+    }, 500);
+  }
+
+  searching = (value) => {
+    const { AllData } = this.state;
+    let search = value.trim();
+    this.setState({
+      searchText: value,
+      dataList: AllData.filter(data => {
+        return (data.title.toLowerCase().includes(value.toLowerCase()) ||
+          data.artist.toLowerCase().includes(value.toLowerCase()) ||
+          data.author.toLowerCase().includes(value.toLowerCase()))
+      })
+    });
+  }
+
+  Cancel = () => { this.setState({ searchText: null }) }
+
+  GoToDetails = (title) => {
+    const { dataList } = this.state;
+    this.props.history.push({
+      pathname: `/manga/ShowDetails${title}`,
+      state: dataList,
+    })
+  }
 
 
   render() {
-    const { mangaId, chaptersId,chapterList,chp } = this.state;
-    console.log(chp);
+    const { mangaId, chaptersId, chapterList, chp, dataList, AllData, searchText } = this.state;
+    console.log(dataList);
+
     return (
       <div>
-        <h1>Hello Dashboard</h1>
-        <h3>Hello wrong answer</h3>
-        
         {/* To upload chapters pages press this button */}
-        <button onClick={this.UploadToFirebase}>Upload</button>
+        {/* <button onClick={this.UploadToFirebase}>Upload</button> */}
+
+        {/* <Table striped bordered hover size="sm">
+          <tr>
+            <th style={Theading}>Name</th>
+            <th style={Theading}>Quantity</th>
+          </tr>
+          <tr>
+            <th style={th}>Manga </th>
+            <td style={td}>{AllData.length}</td>
+          </tr>
+          <tr>
+            <th style={th}>Chapter List</th>
+            <td style={td}>{chapterQuantity}</td>
+          </tr>
+        </Table> */}
+        <div className='container'>
+        <h5 className="jumbutron">Mangas <span class="badge badge-primary">{AllData.length}</span></h5>
+        <hr />
+        <h5 className="jumbutron">Chapters <span class="badge badge-primary">{chapterQuantity}</span></h5>
+        <hr />
+        </div>
+
+        {/* <br/> */}
+        <b>Search through Alias, Artist and Author</b>
+        <br/>
+        <br/>
+
+        <Col sm="6">
+          <Form.Control
+            type="text"
+            style={{ marginBottom: '30px' }}
+            placeholder="Search..."
+            onChange={this.SearchingStuff}
+          />
+        </Col>
+        {dataList && <Button bsStyle="success" onClick={this.Cancel} style={CancelBtn}>Cancel</Button>}
+
+
+        {dataList && <div>
+          {searchText &&  dataList.map((value, index) => {
+            return <span onClick={this.GoToDetails.bind(this, value.title)}>
+              {value.alias.toLowerCase().includes(searchText.toLowerCase()) &&
+                <li style={ListContainer}>{value.alias}
+                  <span style={searchItem}>Alias</span></li>}
+
+              {value.artist.toLowerCase().includes(searchText.toLowerCase()) &&
+                <li style={ListContainer}>{value.artist} <span style={searchItem}>Artist</span></li>}
+
+              {value.author.toLowerCase().includes(searchText.toLowerCase()) &&
+                <li style={ListContainer}>{value.author} <span style={searchItem}>Author</span></li>}
+            </span>
+          })}
+        </div>}
+
       </div>
     );
   }
@@ -86,6 +216,42 @@ class Dashboard extends Component {
 
 export default Dashboard;
 
+const CancelBtn = {
+  float: "right",
+  marginTop: "-65px"
+}
+
+const searchItem = {
+  float: "right",
+  color: '#747f87'
+}
+
+const ListContainer = {
+  margin: '7px',
+  padding: '13px',
+  border: "2px solid #0f0f0f0d",
+  boxShadow: "1px 1px 1px 0px #888888",
+  cursor : 'pointer'
+}
+
+const Theading = {
+  textAlign: 'center',
+  fontFamily: 'cursive',
+  fontSize: '20px',
+  padding : '6px'
+}
+
+const th = {
+  textAlign: 'center',
+  color: 'rgb(105, 114, 123)',
+}
+
+const td = {
+  color: '#6a6e71',
+  marginLeft: '10px',
+  padding: '7px',
+  textAlign: 'center',
+}
 
 
 

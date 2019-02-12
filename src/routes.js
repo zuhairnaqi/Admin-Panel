@@ -23,6 +23,9 @@ const Users = React.lazy(() => import('./views/Users/Users'));
 const User = React.lazy(() => import('./views/Users/User'));
 const MangaDetails = React.lazy(() => import('./views/manga/ShowDetails'));
 const EditManga = React.lazy(() => import('./views/manga/Edit Manga/EditManga'));
+const Searching = React.lazy(() => import("./views/Searching") )
+// const GoToDetails = React.lazy(() => import("./views/Searching/GoToDetails/GoToDetails") )
+
 
 // https://github.com/ReactTraining/react-router/tree/master/packages/react-router-config
 const routes = [
@@ -53,6 +56,8 @@ const routes = [
   { path: '/chapters/ShowChapter/EditChapter',exact: true, name: 'Edit Chapter', component: EditChapter },
   { path: '/users', exact: true,  name: 'Users', component: Users },
   { path: '/users/:id', exact: true, name: 'User Details', component: User },
+  // { path: '/searching', exact: true, name: 'Searching', component: Searching },
+  { path: '/searching-alias:id', exact: true, name: 'GoToDetails', component: Searching },
 ];
 
 export default routes;

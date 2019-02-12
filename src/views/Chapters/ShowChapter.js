@@ -24,13 +24,14 @@ class ShowChapter extends Component {
 
     componentDidMount() {
         const { id } = this.props.match.params;
-        db.collection("CHAPTER_PAGE").doc(id).get()
+        var docId = id.slice(0, id.indexOf('-'));
+        db.collection("CHAPTER_PAGE").doc(docId).get()
             .then(doc => {
                 if (doc.exists) {
                     console.log("Document data:", doc.data().chapt);
                     const chptPages = doc.data().chapt;
                     const chptId = doc.id;
-                    this.setState({ chptPages,chptId })
+                    this.setState({ chptPages, chptId })
                 } else {
                     console.log("No such document!");
                 }
@@ -40,49 +41,119 @@ class ShowChapter extends Component {
 
     }
 
+
+    DeleteDoc = async () => {
+        const { mangaDetail } = this.state;
+        const { id } = this.props.match.params;
+        var docId = id.slice(0, id.indexOf('-'));
+        var prevId = id.slice(id.indexOf('-') + 1);
+        this.DeleteChapterFromMangaDetails(prevId, docId);
+        this.AddDeleteChapterToFirebase(docId);
+        db.collection("CHAPTER_PAGE").doc(id).delete().then(function () {
+            console.log("Document successfully deleted!");
+            swal("Poof! You deleted manga successfully!", { icon: "success" });
+            this.props.history.push("/chapters");
+
+        }).catch(function (error) {
+            console.error("Error removing document: ", error);
+        });
+    }
+
+    DeleteChapterFromMangaDetails = (prevId, docId) => {
+        db.collection("MANGA_DETAIL").doc(prevId).get()
+            .then(doc => {
+                console.log(doc.data());
+                console.log(doc.data().chapters);
+                var chapters = doc.data().chapters;
+                chapters.filter((value, index) => {
+                    if (value['3'] === docId) {
+                        chapters.splice(index, 1);
+                    }
+                })
+                db.collection("MANGA_DETAIL").doc(prevId).update({
+                    chapters
+                })
+                    .then(() => {
+                        console.log("Chapter successfully deleted and manga updated !!")
+                    })
+                    .catch(error => {
+                        console.error("Error updating document: ", error);
+                    });
+
+                console.log("Document successfully deleted!");
+
+                swal("Poof! You deleted manga successfully!", { icon: "success" });
+
+            }).catch(function (error) {
+                console.error("Error removing document: ", error);
+            });
+    }
+
+    AddDeleteChapterToFirebase = async (id) => {
+        const { chptPages } = this.state;
+        db.collection("DELETED_IMAGES").doc(id).set({ chptPages })
+            .then(function () {
+                console.log("Document successfully written!");
+                this.props.history.push('/manga');
+            })
+            .catch(function (error) {
+                console.error("Error writing document: ", error);
+            });
+        await new Promise(resolve => setTimeout(resolve, 1000));
+    }
+
     render() {
-        const { chptPages,chptId } = this.state;
+        const { chptPages, chptId } = this.state;
         const { id } = this.props.match.params
         console.log(id);
         return (
-            <div>
-                <h1 style={titleCss}>Chapter Pages</h1>
-                <Button bsStyle="success" style={edit_btn} onClick={() => {
-                    swal({
-                        title: "Are you sure?",
-                        text: `Do you really want to delete this manga?`,
-                        icon: "info",
-                        buttons: true,
-                        dangerMode: true,
-                    })
-                        .then((willDelete) => {
-                            if (willDelete) {
-                                this.DeleteDoc();
-                            } else {
-                                swal("Your request is cancelled!", { icon: "error" });
-                                console.log("ohh");
-                            }
-                        });
-                }}>Delete Manga</Button>
+            <div >
 
-                <Button bsStyle="success" style={edit_btn} onClick={() => this.props.history.push({
-                    pathname: '/chapters/ShowChapter/EditChapter',
-                    state : {
-                        chptPages,
-                        chptId
-                    }
-                })}>Edit Manga</Button>
+                <div className="jumbotron">
+                    <h1 >Chapter Pages</h1>
 
-                <div style={crouselCss}>
-                    <Carousel showArrows={true}>
-                        {chptPages.length && chptPages.map((value, index) => {
-                            return <div>
-                                {value[2] == "/" ? <img src={`https://cdn.mangaeden.com/mangasimg/${value}`} style={img} /> : 
-                                <img src={value} style={img} />}
-                                {/* <p className="legend">Page no {index + 1}</p> */}
-                            </div>
-                        })}
-                    </Carousel>
+                    <Button bsStyle="success" style={edit_btn} onClick={() => {
+                        swal({
+                            title: "Are you sure?",
+                            text: `Do you really want to delete this manga?`,
+                            icon: "info",
+                            buttons: true,
+                            dangerMode: true,
+                        })
+                            .then((willDelete) => {
+                                if (willDelete) {
+                                    this.DeleteDoc();
+                                } else {
+                                    swal("Your request is cancelled!", { icon: "error" });
+                                    console.log("ohh");
+                                }
+                            });
+                    }}>Delete Chapter</Button>
+
+                    <Button bsStyle="success" style={edit_btn} onClick={() => this.props.history.push({
+                        pathname: '/chapters/ShowChapter/EditChapter',
+                        state: {
+                            chptPages,
+                            chptId
+                        }
+                    })}>Edit Images</Button>
+                </div>
+
+                <div className="container" style={crouselCss}>
+                    <div class="row">
+                        <div class="col-sm-6 col-md-8 col-lg-8">
+                            <Carousel showArrows={true}>
+                                {chptPages.length && chptPages.map((value, index) => {
+                                    return <div>
+                                        {value[2] == "/" ? <img src={`https://cdn.mangaeden.com/mangasimg/${value}`} style={img} /> :
+                                            <img src={value} style={img} />}
+                                        {/* <p className="legend">Page no {index + 1}</p> */}
+                                    </div>
+                                })}
+
+                            </Carousel>
+                        </div>
+                    </div>
                 </div>
 
 
@@ -106,20 +177,20 @@ const titleCss = {
     lineHeight: "42px",
     textTransform: "uppercase",
     textShadow: "0 2px white, 0 3px #777",
-    marginTop : '-8px'
+    marginTop: '-8px'
 }
 const img = {
-    width: '55%',
+    width: '90%',
     marginBottom: '-10%'
 }
 const crouselCss = {
-    width: "60%",
+    width: "100%",
     margin: "0 auto",
     alignItems: 'center',
-    height: "100vh"
+    // height: "100%"
 }
 const edit_btn = {
     float: 'right',
     margin: "2% 2% 0 0",
-    marginTop : '-10px'
-  }
+    marginTop: '-10px'
+}

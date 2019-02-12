@@ -19,7 +19,7 @@ class Manga extends Component {
         this.state = {
             mangaData: [],
             page: 1,
-            mangaList: "",
+            mangaList: [],
         }
     }
 
@@ -39,46 +39,17 @@ class Manga extends Component {
 
       
         // FOR RENDERING DATA
-        db.collection("MANGA_LIST").doc("Page_0").get()
+        const { mangaList } = this.state;
+        db.collection("MANGA_LIST").orderBy("i").limit(15).get()
             .then(doc => {
-                if (doc.exists) {
-                    console.log("Document data:", doc.data());
-                    var manga = doc.data().manga;
-                    var mangaList = manga.filter((value, index) => {
-                        return index < 10;
-                    })
-                    this.setState({ mangaList })
-                } else {
-                    console.log("No such document!");
-                }
+                console.log(doc.docs[0].data);
+                for (var i = 0; i < doc.docs.length; i++) {
+                    var data = doc.docs[i].data();
+                    mangaList.push(data);
+                  }
+                  this.setState({ mangaList });
             }).catch(function (error) {
                 console.log("Error getting document:", error);
-            });
-    }
-
-
-    FetchDocument = () => {
-        const value = {
-            name: 'zuhair naqi',
-            class: 'BSSE'
-        }
-        db.collection("MANGA_LIST").doc("Page_0").collection("myInfo").add(value)
-            .then(function () {
-                console.log("Document successfully written!");
-            })
-            .catch(function (error) {
-                console.error("Error writing document: ", error);
-            });
-
-    }
-
-    GetDocument = () => {
-        db.collection("MANGA_LIST").doc("Page_0").collection("myInfo").get()
-            .then(function (doc) {
-                console.log(doc.docs);
-            })
-            .catch(function (error) {
-                console.error("Error writing document: ", error);
             });
     }
 
@@ -117,8 +88,6 @@ class Manga extends Component {
         console.log("mangaList", mangaList);
         return (
             <div className="App">
-                <button onClick={this.FetchDocument}>Upload to firebase</button>
-                <button onClick={this.GetDocument}>Get data to firebase</button>
                 <h1>Manga List</h1>
                 {!mangaList && <img src={loader} style={{ margin: '10px 50px 0px 26%', width: '45%' }} />}
 

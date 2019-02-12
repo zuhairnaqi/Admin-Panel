@@ -7,6 +7,7 @@ import swal from 'sweetalert';
 
 const MANGA_DETAIL = "https://www.mangaeden.com/api/manga/";
 const MANGA_LIST = "https://www.mangaeden.com/api/list/0/";
+
 var db = firebase.firestore();
 // Disable deprecated features
 // db.settings({
@@ -30,12 +31,12 @@ class Manga extends Component {
         querySnapshot.docs.forEach(doc => {
           var data = doc.data();
           console.log(data);
-          var chp = [];
-          for (let i = 0; i < data.chapters_len; i++) {
-            var index = data.chapters[[`${i}`]][["2"]];
-            chp.push(index);
-          }
-          data.chapters = chp;
+          // var chp = [];
+          // for (let i = 0; i < data.chapters_len; i++) {
+          //   var index = data.chapters[[`${i}`]][["2"]];
+          //   chp.push(index);
+          // }
+          // data.chapters = chp;
           data.id = doc.id;
           this.setState({ mangaDetail: data })
         })
@@ -44,7 +45,7 @@ class Manga extends Component {
         console.log("Error getting documents: ", error);
       });
 
-    
+
 
     // Fetch for adding manga detail in firebase 
     // fetch(`${MANGA_LIST}?p=${0}&l=${0}`)
@@ -59,6 +60,24 @@ class Manga extends Component {
     //   })
     //   .catch(err => console.log(err));
   }
+
+
+  // componentWillMount() {
+  //   console.log("componetn will mount");
+  //   if (localStorage.getItem("AllMangaDetails")) {
+  //     var AllData = JSON.parse(localStorage.getItem("AllMangaDetails"));
+  //     console.log(AllData);
+  //     var obj = '' ;
+  //     AllData.map(value => {
+  //       // if (value.title == this.props.match.params.id) {
+  //       if (value.title == "Cyborg Grandpa-G") {
+  //         console.log(value);
+  //         obj = value
+  //       }
+  //     })
+  //     this.setState({ mangaDetail: obj })
+  //   }
+  // }
 
 
 
@@ -90,29 +109,54 @@ class Manga extends Component {
   //   }
   // }
 
-  DeleteDoc = () => {
+  DeleteDoc = async() => {
     const { mangaDetail } = this.state;
+    this.DeleteFileFromMangaList();
+    this.AddDeleteFileToFirebase();
     db.collection("MANGA_DETAIL").doc(mangaDetail.id).delete().then(function () {
       console.log("Document successfully deleted!");
+
       swal("Poof! You deleted manga successfully!", { icon: "success" });
-      db.collection("DELETED_MANGA").doc(mangaDetail.id).set(mangaDetail)
-        .then(function () {
-          console.log("Document successfully written!");
-          this.props.history.push('/manga');
-        })
-        .catch(function (error) {
-          console.error("Error writing document: ", error);
-        });
+
     }).catch(function (error) {
       console.error("Error removing document: ", error);
     });
+  }
 
+  DeleteFileFromMangaList = async () => {
+    db.collection("MANGA_LIST").where("t" , "==" , this.props.match.params.id)
+      .get()
+      .then(querySnapshot => {
+        querySnapshot.docs.forEach(doc => {
+          db.collection("MANGA_LIST").doc(doc.id).delete().then(function () {
+            console.log("Manga deleted from Manga_List");
+          })
+        })
+      })
+      .catch(error => {
+        console.log("Error getting documents: ", error);
+      });
+      
+      await new Promise(resolve => setTimeout(resolve, 1000));
+  }
 
+  AddDeleteFileToFirebase = async () => {
+    const { mangaDetail } = this.state;
+    db.collection("DELETED_MANGA").doc(mangaDetail.id).set(mangaDetail)
+      .then(function () {
+        console.log("Document successfully written!");
+        this.props.history.push('/manga');
+      })
+      .catch(function (error) {
+        console.error("Error writing document: ", error);
+      });
+      await new Promise(resolve => setTimeout(resolve, 1000));
   }
 
   render() {
     const { mangaDetail } = this.state;
     console.log(mangaDetail);
+    console.log(this.props);
     return (
       <div className="App">
         {/* To upload the chapter on firebase  */}
@@ -137,7 +181,6 @@ class Manga extends Component {
                   this.DeleteDoc();
                 } else {
                   swal("Your request is cancelled!", { icon: "error" });
-                  console.log("ohh");
                 }
               });
           }}>Delete Manga</Button>
@@ -150,38 +193,44 @@ class Manga extends Component {
 
           <br />
           <Table striped bordered hover size="sm">
-            <tr>
-              <th style={th}>Alias</th>
-              <td style={td}>{mangaDetail.alias}</td>
-            </tr>
-            <tr>
-              <th style={th}>Artist</th>
-              <td style={td}>{mangaDetail.artist}</td>
-            </tr>
-            <tr>
-              <th style={th}>Author</th>
-              <td style={td}>{mangaDetail.author}</td>
-            </tr>
-            <tr>
-              <th style={th}>Released Date</th>
-              <td style={td}>{mangaDetail.released}</td>
-            </tr>
-            <tr>
-              <th style={th}>Categories</th>
-              <td style={td}><ul>{mangaDetail.categories.map(value => {
-                return <li>{value}</li>
-              })}</ul></td>
-            </tr>
-            <tr>
-              <th style={th}>Discription</th>
-              <td style={td}>{mangaDetail.description}</td>
-            </tr>
+            <thead>
+              <tr>
+                <th style={th}>Alias</th>
+                <td style={td}>{mangaDetail.alias}</td>
+              </tr>
+            </thead>
+
+            <tbody>
+              <tr>
+                <th style={th}>Artist</th>
+                <td style={td}>{mangaDetail.artist}</td>
+              </tr>
+              <tr>
+                <th style={th}>Author</th>
+                <td style={td}>{mangaDetail.author}</td>
+              </tr>
+              <tr>
+                <th style={th}>Released Date</th>
+                <td style={td}>{mangaDetail.released}</td>
+              </tr>
+              <tr>
+                <th style={th}>Discription</th>
+                <td style={td}>{mangaDetail.description}</td>
+              </tr>
+              <tr>
+                <th style={th}>Categories</th>
+                <td style={td}><ul>{mangaDetail.categories.map(value => {
+                  return <li>{value}</li>
+                })}</ul></td>
+              </tr>
+            </tbody>
+
           </Table>
 
           <br />
           <h1 style={{ marginBottom: '15px' }}>Chapters :  </h1>
           {mangaDetail.chapters.map(value => {
-            return <li style={chp_list}>{value}</li>
+            return <li style={chp_list}>{value['2']}</li>
           })}
         </div>}
 
@@ -226,7 +275,7 @@ const img = {
   marginRight: "auto",
   marginTop: "10px",
   marginBottom: '20px',
-  width: "50%",
+  width: "35%",
 }
 const th = {
   textAlign: 'center',

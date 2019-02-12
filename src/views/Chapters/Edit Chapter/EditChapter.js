@@ -100,7 +100,7 @@ class EditChapter extends Component {
                     imagesRef.getDownloadURL()
                         .then((downloadURL) => {
                             console.log("Image done", downloadURL);
-                            this.setState({ imagePath: downloadURL})
+                            this.setState({ imagePath: downloadURL })
                             resolve(downloadURL);
                         })
                         .catch((error) => {
@@ -113,11 +113,6 @@ class EditChapter extends Component {
         })
     }
 
-    // componentWillMount(){
-    //     const { state } = this.props.location;
-    //     console.log(chptId);
-    //     console.log(chptPages);
-    // }
 
     UpdateImage = () => {
         const { showButtons, imagePath, showIndex } = this.state;
@@ -126,26 +121,24 @@ class EditChapter extends Component {
         console.log(chptPages);
         console.log(this.props);
         db.collection("CHAPTER_PAGE").doc(chptId).update({
-            chapt : chptPages
+            chapt: chptPages
         })
             .then(() => {
                 swal("Good job!", "Edited Profile successfully!!", "success");
                 this.props.history.push({
                     pathname: '/chapters/ShowChapter/EditChapter',
-                    state : {
+                    state: {
                         chptPages,
                         chptId
                     }
                 });
             })
             .catch(error => {
-                // The document probably doesn't exist.
                 console.error("Error updating document: ", error);
             });
     }
 
     render() {
-        // const { artist, alias, author, released, description, categories } = this.state;
         const { showButtons, showIndex, imagePath } = this.state;
         const { state } = this.props.location;
         console.log(state);
@@ -158,24 +151,35 @@ class EditChapter extends Component {
                 {state && <div style={listContainer}>
 
                     {state.chptPages.length && state.chptPages.map((value, index) => {
-                        return <div>
+                        return <div key={index} style={{
+                            margin: 5,
+                            marginBottom: '10%'
+                        }}>
                             {(value[2] == "/") ? <img src={`https://cdn.mangaeden.com/mangasimg/${value}`} style={imgCss} /> :
-                            <img src={value} style={imgCss} />}
+                                <img src={value} style={imgCss} />}
 
                             {showButtons && showIndex === index &&
                                 <Col sm="10">
-                                    <Form.Control type="file" onChange={this.FileHandler} />
+                                    <div className="custom-file" style={{
+                                        marginTop: '10px'
+                                    }}>
+                                        <input className="custom-file-input" type="file" onChange={this.FileHandler} />
+                                        <label class="custom-file-label" for="validatedCustomFile">Choose file...</label>
+                                    </div>
                                 </Col>
                             }
-                            {!showButtons && <Button bsStyle="success" style={EditBtn}
-                                onClick={() => this.setState({ showButtons: true, showIndex: index })} >Replace image</Button>}
+                            {!showButtons && showIndex !== index && <button  class="btn btn-info" style={EditBtn}
+                                onClick={() => this.setState({ showButtons: true, showIndex: index })} >Replace image</button>}
 
-                            {showButtons && imagePath && showIndex === index && <Button bsStyle="success" style={EditBtn}
-                                onClick={this.UpdateImage} >Update image</Button>}
+                            {showButtons && showIndex === index && <button  class="btn btn-info" style={{
+                                 float: 'right',
+                                 marginRight: '10px'
+                            }}
+                                onClick={() => this.setState({ showButtons: false, showIndex: null })} >Cancel</button>}
 
-                            {showButtons && <Button bsStyle="success" style={EditBtn}
-                                onClick={() => this.setState({ showButtons: false })} >Cancel</Button>}
-                            <br />
+                            {showButtons && imagePath && showIndex === index && <button  class="btn btn-info" style={EditBtn}
+                                onClick={this.UpdateImage} >Update image</button>}
+
                         </div>
                     })}
 
@@ -202,8 +206,6 @@ const EditBtn = {
 const listContainer = {
     border: '1px solid #dad7d7',
     marginBottom: '10px',
-    // fontSize: '17px',
-    // lineHeight: '90px',
 }
 
 // const Edit_Form = {

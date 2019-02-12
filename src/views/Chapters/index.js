@@ -22,24 +22,31 @@ class Charts extends Component {
     const { chapterList } = this.state;
     db.collection("MANGA_DETAIL").orderBy("alias").limit(10).get()
       .then(doc => {
-        // if (doc.exists) {
-          for (var i = 0; i < doc.docs.length; i++) {
+        console.log(doc.docs[0].data());
+        for (var i = 1; i < doc.docs.length; i++) {
+          // if (doc.docs[i].exists) {
             var data = doc.docs[i].data();
-            var chp = [];
-            for (let i = 0; i < data.chapters_len; i++) {
-              // console.log(data.chapters[[`${i}`]]);
-              var page = data.chapters[[`${i}`]][2];
-              var id = data.chapters[[`${i}`]][3];
-              chp.push({page,id});
+            var detailId = data.id;
+            if (data.chapters.length) {
+              var chp = [];
+              for (let j = 0; j < data.chapters_len; j++) {
+                
+                var page = data.chapters[j]['2'];
+                console.log(page);
+                var id = data.chapters[j]['3'];
+                console.log(id)
+                chp.push({ page, id });
+              }
+              data.chapters = chp;
             }
-            data.chapters = chp;
+            data.prevId = detailId;
             chapterList.push(data);
-          }
-          console.log(chapterList);
-          this.setState({ chapterList });
-        // } else {
-        //   console.log("Document is empty");
-        // }
+          // } else {
+          //   console.log("Document is empty");
+          // }
+        }
+        console.log(chapterList);
+        this.setState({ chapterList });
       }).catch(function (error) {
         console.log("Error getting document:", error);
       });
@@ -48,10 +55,11 @@ class Charts extends Component {
 
   render() {
     const { chapterList, showIndex, showButtons } = this.state;
+    console.log(chapterList);
     return (
       <div className="App">
         <h1>Chapter List</h1>
-        {!chapterList && <img src={loader} style={{ margin: '10px 50px 0px 26%', width: '45%' }} />}
+        {!chapterList.length && <img src={loader} style={{ margin: '10px 50px 0px 26%', width: '45%' }} />}
 
         {/* To upload chapters pages press this button */}
         {/* <button onClick={this.UploadToFirebase}>Upload</button> */}
@@ -72,9 +80,9 @@ class Charts extends Component {
           return <div style={listContainer}>
             <div onClick={() => this.setState({ showButtons: !showButtons, showIndex: index })} >
 
-              {value.image[2] == "/" ? <img src={`https://cdn.mangaeden.com/mangasimg/${value.image}`} style={imgCss} /> : 
-              <img src={value.image} style={imgCss} />}
-              
+              {value.image[2] == "/" ? <img src={`https://cdn.mangaeden.com/mangasimg/${value.image}`} style={imgCss} /> :
+                <img src={value.image} style={imgCss} />}
+
               <span style={Chapter_link} >{value.alias}</span></div>
 
             {/*  ONCLICK TO SHOW THE SELECTIVE CHAPTER'S TOPICS AND Btn TO OPEN THAT BOOK */}
@@ -83,7 +91,7 @@ class Charts extends Component {
                 return <div>
                   <b style={{ margin: '0px 20px 0px 13px' }}>.</b>
                   {data.page}
-                  <Button bsStyle="success" onClick={() => this.props.history.push(`/chapters/ShowChapter${data.id}`)} style={buttonCss} >
+                  <Button bsStyle="success" onClick={() => this.props.history.push(`/chapters/ShowChapter${data.id}-${value.prevId}`)} style={buttonCss} >
                     Open this book</Button>
                 </div>
               })}
