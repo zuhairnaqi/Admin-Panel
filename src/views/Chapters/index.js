@@ -5,10 +5,10 @@ import { Button } from 'react-bootstrap';
 const CHAPTERLIST = "https://www.mangaeden.com/api/chapter/";
 
 var db = firebase.firestore();
-// Disable deprecated features
-// db.settings({
-//   timestampsInSnapshots: true
-// });
+db.settings({
+  timestampsInSnapshots: true
+});
+var page = 0;
 
 class Charts extends Component {
   constructor(props) {
@@ -20,33 +20,32 @@ class Charts extends Component {
 
   componentDidMount() {
     const { chapterList } = this.state;
-    db.collection("MANGA_DETAIL").orderBy("alias").limit(10).get()
+    db.collection(`Page_${page}`).orderBy("title").limit(20).get()
       .then(doc => {
-        console.log(doc.docs[0].data());
-        for (var i = 1; i < doc.docs.length; i++) {
-          // if (doc.docs[i].exists) {
-            var data = doc.docs[i].data();
-            var detailId = data.id;
-            if (data.chapters.length) {
-              var chp = [];
-              for (let j = 0; j < data.chapters_len; j++) {
-                
+        for (var i = 0; i < doc.docs.length; i++) {
+          console.log(doc.docs[i].data());
+          var data = doc.docs[i].data();
+          var detailId = doc.docs[i].id;
+
+          if (data.chapters.length) {
+            var chp = [];
+            for (let j = 0; j < data.chapters_len; j++) {
+              if (data.chapters[j]) {
                 var page = data.chapters[j]['2'];
-                console.log(page);
                 var id = data.chapters[j]['3'];
-                console.log(id)
                 chp.push({ page, id });
               }
-              data.chapters = chp;
             }
-            data.prevId = detailId;
-            chapterList.push(data);
-          // } else {
-          //   console.log("Document is empty");
-          // }
+            data.chapters = chp;
+          }
+
+          data.mangaId = detailId;
+          chapterList.push(data);
         }
+
         console.log(chapterList);
         this.setState({ chapterList });
+
       }).catch(function (error) {
         console.log("Error getting document:", error);
       });
@@ -61,27 +60,10 @@ class Charts extends Component {
         <h1>Chapter List</h1>
         {!chapterList.length && <img src={loader} style={{ margin: '10px 50px 0px 26%', width: '45%' }} />}
 
-        {/* To upload chapters pages press this button */}
-        {/* <button onClick={this.UploadToFirebase}>Upload</button> */}
-
-        {/* {chapterList && chapterList.map((value, index) => {
-          return <div>
-            <p style={{ marginLeft: '15px' }}>{value.author}</p>
-            <span>chapter : {value.chapters.map(val => {
-            if(val){
-              return <li>{val}</li>
-            }else{
-              return null
-            }
-          })}</span>
-          </div>
-        })} */}
         {chapterList && chapterList.map((value, index) => {
           return <div style={listContainer}>
             <div onClick={() => this.setState({ showButtons: !showButtons, showIndex: index })} >
-
-              {value.image[2] == "/" ? <img src={`https://cdn.mangaeden.com/mangasimg/${value.image}`} style={imgCss} /> :
-                <img src={value.image} style={imgCss} />}
+              <img src={`https://cdn.mangaeden.com/mangasimg/${value.image}`} style={imgCss} />
 
               <span style={Chapter_link} >{value.alias}</span></div>
 
@@ -91,7 +73,7 @@ class Charts extends Component {
                 return <div>
                   <b style={{ margin: '0px 20px 0px 13px' }}>.</b>
                   {data.page}
-                  <Button bsStyle="success" onClick={() => this.props.history.push(`/chapters/ShowChapter${data.id}-${value.prevId}`)} style={buttonCss} >
+                  <Button bsStyle="success" onClick={() => this.props.history.push(`/chapters/ShowChapter${page}${data.id}-${value.mangaId}`)} style={buttonCss} >
                     Open this book</Button>
                 </div>
               })}
@@ -127,60 +109,3 @@ const imgCss = {
   paddingLeft: '20px',
   cursor: 'pointer',
 }
-
-
-
-// componentDidMount() {
-  //   const { chapterList } = this.state;
-  //   // db.collection("MANGA_DETAIL").orderBy("alias").limit(10).get()
-  //   db.collection("MANGA_DETAIL").orderBy("alias").get()
-  //     .then(doc => {
-  //       // if (doc.exists) {
-  //         for (var i = 0; i < doc.docs.length; i++) {
-  //           var data = doc.docs[i].data();
-  //           var chp = [];
-  //           for (let i = 0; i < data.chapters_len; i++) {
-  //             // console.log(data.chapters[[`${i}`]]);
-  //             var page = data.chapters[[`${i}`]][2];
-  //             var id = data.chapters[[`${i}`]][3];
-  //             chp.push({page,id});
-  //           }
-  //           data.chapters = chp;
-  //           chapterList.push(data);
-  //         }
-  //         this.setState({ chapterList })
-  //       // } else {
-  //       //   console.log("Document is empty");
-  //       // }
-  //     }).catch(function (error) {
-  //       console.log("Error getting document:", error);
-  //     });
-  // }
-
-  // UploadToFirebase = async() => {
-  //   const { chapterList } = this.state;
-  //   for (let i = 116; i < chapterList.length; i++) {
-  //     for (let j = 0; j < chapterList[i].chapters_len; j++) {
-  //       // const element = chapterList[i].chapters[j][3];
-  //       await new Promise(resolve => setTimeout(resolve, 1000));
-  //       const element = chapterList[i].chapters[j].id;
-  //       fetch(`${CHAPTERLIST}${element}/`)
-  //         .then(res => res.json())
-  //         .then(async (value) => {
-  //           var chapt = [];
-  //           for (let k = 0; k < value.images.length; k++) {
-  //             const img = value.images[k][1];
-  //             chapt.push(img);
-  //           }
-  //           await new Promise(resolve => setTimeout(resolve, 2000));
-  //           db.collection("CHAPTER_PAGE").doc(element).set({ chapt })
-  //             .then(function () {
-  //               console.log("Document successfully written! page number " + i + " sub " + j);
-  //             })
-  //             .catch(function (error) {
-  //               console.error("Error writing document: ", error);
-  //             });
-  //         });
-  //     }
-  //   }
-  // }

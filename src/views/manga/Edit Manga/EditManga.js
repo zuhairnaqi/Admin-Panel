@@ -13,30 +13,6 @@ class EditManga extends Component {
         }
     }
 
-
-    // componentDidMount() {
-
-    //     db.collection("MANGA_DETAIL").where("alias", "==", this.props.match.params.id)
-    //         .get()
-    //         .then(querySnapshot => {
-    //             querySnapshot.docs.forEach(doc => {
-    //                 var data = doc.data();
-    //                 var chp = [];
-    //                 for (let i = 0; i < data.chapters_len; i++) {
-    //                     var index = data.chapters[[`${i}`]][["2"]];
-    //                     chp.push(index);
-    //                 }
-    //                 data.chapters = chp;
-    //                 this.setState({ mangaDetail: data })
-    //             })
-    //         })
-    //         .catch(error => {
-    //             console.log("Error getting documents: ", error);
-    //         });
-    // }
-
-
-    // ChangeTitle = (e) => { this.setState({ title: e.target.value }) }
     ChangeAlias = (e) => { this.setState({ alias: e.target.value }) }
     ChangeArtist = (e) => { this.setState({ artist: e.target.value }) }
     ChangeAuthor = (e) => { this.setState({ author: e.target.value }) }
@@ -53,43 +29,44 @@ class EditManga extends Component {
         console.log(state);
         if (state) {
             this.setState({
-                // title: "Joshiraku",
-                // artist: "Yasu",
-                // alias: "joshiraku",
-                // author: "KUMETA Kouji",
-                // released: 2009,
-                // description: "A joint effort between popular illustrator Yasu and KUMETA Kouji, creator of Sayonara Zet",
-                // categories: ["Shounen", "Comedy", "Slice of Life"]
-                title: state.title,
-                artist: state.artist,
-                alias: state.alias,
-                author: state.author,
-                released: state.released,
-                description: state.description,
-                categories: state.categories
+                title: state.manga.title,
+                artist: state.manga.artist,
+                alias: state.manga.alias,
+                author: state.manga.author,
+                released: state.manga.released,
+                description: state.manga.description,
+                categories: state.manga.categories
             });
         }
     }
 
     Update = () => {
-        const { title,artist, alias, author, released, description, categories } = this.state;
-        const { id } = this.props.location.state;
-        db.collection("MANGA_DETAIL").doc(id).update({
+        const { title, artist, alias, author, released, description, categories } = this.state;
+        const { docId, chapters } = this.props.location.state.manga;
+        const { page,manga } = this.props.location.state;
+        const image = manga.image;
+        db.collection(`Page_${page}`).doc(docId).update({
             artist, alias, author, released, description, categories
         })
-        .then( () => {
-          swal("Good job!", "Edited Profile successfully!!", "success");
-          this.props.history.push(`/manga/ShowDetails${title}`);
-        })
-        .catch( error => {
-            // The document probably doesn't exist.
-            console.error("Error updating document: ", error);
-        });
+            .then(() => {
+                swal("Good job!", "Edited Profile successfully!!", "success");
+                this.props.history.push({
+                    pathname: `/manga/ShowDetails`,
+                    state: { 
+                        manga : { title, artist, alias, author, released, description, categories, docId, chapters, image },
+                        page
+                     }
+                });
+            })
+            .catch(error => {
+                console.error("Error updating document: ", error);
+            });
     }
 
     render() {
         const { artist, alias, author, released, description, categories } = this.state;
         const { state } = this.props.location;
+        console.log(this.props);
         return (
             <div>
                 {!state && <b>Your Page is relaoded therefore data crashed</b>}
@@ -97,63 +74,53 @@ class EditManga extends Component {
 
                 {state && <div style={Edit_Form}>
                     <br />
-
-                    {/* <InputGroup className="mb-3">
-                        <InputGroup.Prepend>
-                            <InputGroup.Text id="basic-addon1"><b>Title</b></InputGroup.Text>
-                        </InputGroup.Prepend>
-                        <FormControl
-                        type="text"
-                        value={title}
-                        onChange={this.ChangeTitle}
-                    />
-                    </InputGroup> */}
+                    
                     <InputGroup className="mb-3">
                         <InputGroup.Prepend>
                             <InputGroup.Text id="basic-addon1"><b>Alias</b></InputGroup.Text>
                         </InputGroup.Prepend>
                         <FormControl
-                        type="text"
-                        value={alias}
-                        onChange={this.ChangeAlias}
-                    />
+                            type="text"
+                            value={alias}
+                            onChange={this.ChangeAlias}
+                        />
                     </InputGroup>
                     <InputGroup className="mb-3">
                         <InputGroup.Prepend>
                             <InputGroup.Text id="basic-addon1"><b>Artist</b></InputGroup.Text>
                         </InputGroup.Prepend>
                         <FormControl
-                        type="text"
-                        value={artist}
-                        onChange={this.ChangeArtist}
-                    />
+                            type="text"
+                            value={artist}
+                            onChange={this.ChangeArtist}
+                        />
                     </InputGroup>
                     <InputGroup className="mb-3">
                         <InputGroup.Prepend>
                             <InputGroup.Text id="basic-addon1"><b>Author</b></InputGroup.Text>
                         </InputGroup.Prepend>
                         <FormControl
-                        type="text"
-                        value={author}
-                        onChange={this.ChangeAuthor}
-                    />
+                            type="text"
+                            value={author}
+                            onChange={this.ChangeAuthor}
+                        />
                     </InputGroup>
                     <InputGroup className="mb-3">
                         <InputGroup.Prepend>
                             <InputGroup.Text id="basic-addon1"><b>Released Date</b></InputGroup.Text>
                         </InputGroup.Prepend>
                         <FormControl
-                        type="number"
-                        value={released}
-                        placeholder="Enter phone number"
-                        onChange={this.ChangeReleased}
-                    />
+                            type="number"
+                            value={released}
+                            placeholder="Enter phone number"
+                            onChange={this.ChangeReleased}
+                        />
                     </InputGroup>
 
-                    <br /> 
+                    <br />
 
                     <h4>Categories</h4>
-                    <br/>
+                    <br />
                     {categories.map((value, index) => {
                         return <InputGroup className="mb-3">
                             <InputGroup.Prepend>
@@ -170,14 +137,14 @@ class EditManga extends Component {
                     <br />
 
                     <h4>Description</h4>
-                    <br/>
+                    <br />
                     <Form.Group controlId="exampleForm.ControlTextarea1">
                         <Form.Control as="textarea" rows="3" onChange={this.ChangeDescription} value={description} />
                     </Form.Group>
                     <br />
 
                     <Button bsStyle="primary" onClick={this.Update}>Save</Button>
-                    <br/>
+                    <br />
                 </div>}
 
             </div>
@@ -188,19 +155,19 @@ class EditManga extends Component {
 export default EditManga;
 
 const Edit_Form = {
-    margin : "0 auto",
-    textAlign : 'center',
-    margin : '0 15% 0 15%'
+    margin: "0 auto",
+    textAlign: 'center',
+    margin: '0 15% 0 15%'
 }
 
 const heading1 = {
-    textAlign : 'center',
+    textAlign: 'center',
     margin: "1em 0 0.5em 0",
-	color: "#343434",
-	fontWeight: "normal",
-	fontFamily: "'Ultra', sans-serif",
-	fontSize: "36px",
-	lineHeight: "42px",
-	textTransform: "uppercase",
-	textShadow: "0 2px white, 0 3px #777",
+    color: "#343434",
+    fontWeight: "normal",
+    fontFamily: "'Ultra', sans-serif",
+    fontSize: "36px",
+    lineHeight: "42px",
+    textTransform: "uppercase",
+    textShadow: "0 2px white, 0 3px #777",
 }

@@ -4,18 +4,10 @@ import { Button, FormControl, Form, Table, Col } from 'react-bootstrap';
 
 var db = firebase.firestore();
 
-const cors = "https://cors-anywhere.herokuapp.com/";
-const MANGA_LIST = "https://www.mangaeden.com/api/list/0/";
-const MANGA_DETAIL = "https://www.mangaeden.com/api/manga/";
-const CHAPTERLIST = "https://www.mangaeden.com/api/chapter/";
-
 var db = firebase.firestore();
-// Disable deprecated features
-db.settings({
-  timestampsInSnapshots: true
-});
-
-
+// db.settings({
+//   timestampsInSnapshots: true
+// });
 
 var searchTimeout = "";
 var chapterQuantity = 0;
@@ -29,7 +21,7 @@ class Dashboard extends Component {
       chp: [],
       AllData: [],
       searchText: '',
-      filterList: [],
+      filterList: []
     }
   }
 
@@ -83,36 +75,69 @@ class Dashboard extends Component {
 
 
   componentDidMount() {
+    this.FetchDataFromDatabase();
+  }
+
+  FetchDataFromDatabase = async () => {
     const { AllData } = this.state;
 
-    db.collection("MANGA_DETAIL").get()
-      .then(querySnapshot => {
-        querySnapshot.forEach(doc => {
-          var data = doc.data();
-          AllData.push(data);
-          chapterQuantity = chapterQuantity + data.chapters_len;
+    var a = 0;
+    var isData = true;
+    do {
+      db.collection(`Page_${a}`).get()
+        .then(querySnapshot => {
+          if (querySnapshot.docs.length) {
+            querySnapshot.forEach(doc => {
+              var data = doc.data();
+              data.page = a;
+              AllData.push(data);
+              chapterQuantity = chapterQuantity + data.chapters_len;
+            });
+
+            this.setState({ AllData });
+            console.log(chapterQuantity);
+            a++
+          } else {
+            isData = false;
+            console.log("Empty field");
+          }
+        })
+        .catch(error => {
+          console.log("Error getting documents: ", error);
+          isData = false;
         });
-        console.log(chapterQuantity);
-        if (JSON.parse(localStorage.getItem("AllMangaDetails")).length < AllData.length) {
-          localStorage.setItem("AllMangaDetails", JSON.stringify(AllData));
-          localStorage.setItem("chapterQuantity", JSON.stringify(chapterQuantity));
-          this.setState({ AllData })
-        }
-      })
-      .catch(error => {
-        console.log("Error getting documents: ", error);
-      });
+      await new Promise(resolve => setTimeout(resolve, 2000));
+
+      // var StorageData = JSON.parse(localStorage.getItem(`Manga_Page_${a}`));
+
+      // if (StorageData) {
+      //   if (StorageData.length < AllData.length) {
+      //     localStorage.setItem(`Manga_Page_${a}`, JSON.stringify(currentData));
+      //     localStorage.setItem("chapterQuantity", JSON.stringify(chapterQuantity));
+      //     AllData.concat(currentData);
+      //     this.setState({ AllData })
+      //   }
+      // } else {
+      //   localStorage.setItem(`Manga_Page_${a}`, JSON.stringify(currentData));
+      //   localStorage.setItem("chapterQuantity", JSON.stringify(chapterQuantity));
+      //   AllData.concat(currentData); 
+      //   this.setState({ AllData });
+      // }
+
+    } while (isData)
+
   }
 
-  componentWillMount() {
-    if (localStorage.getItem("AllMangaDetails") && localStorage.getItem("chapterQuantity")) {
-      var AllData = JSON.parse(localStorage.getItem("AllMangaDetails"));
-      chapterQuantity = parseInt(localStorage.getItem("chapterQuantity"));
-      console.log(AllData);
-      console.log(chapterQuantity);
-      this.setState({ AllData });
-    }
-  }
+  // componentWillMount() {
+  //   var AllData = JSON.parse(localStorage.getItem(`Manga_Page_${a}`));  //error
+  //   var chapterQuantity = parseInt(localStorage.getItem("chapterQuantity"));
+
+  //   if (AllData && chapterQuantity) {
+  //     console.log(AllData);
+  //     console.log(chapterQuantity);
+  //     this.setState({ AllData });
+  //   }
+  // }
 
   SearchingStuff = (event) => {
     event.preventDefault();
@@ -125,7 +150,6 @@ class Dashboard extends Component {
 
   searching = (value) => {
     const { AllData } = this.state;
-    let search = value.trim();
     this.setState({
       searchText: value,
       dataList: AllData.filter(data => {
@@ -138,11 +162,14 @@ class Dashboard extends Component {
 
   Cancel = () => { this.setState({ searchText: null }) }
 
-  GoToDetails = (title) => {
-    const { dataList } = this.state;
+  GoToDetails = (obj) => {
+    // const { dataList } = this.state;
     this.props.history.push({
-      pathname: `/manga/ShowDetails${title}`,
-      state: dataList,
+      pathname: `/manga/ShowDetails`,
+      state: {
+        manga: obj,
+        page : obj.page
+      }
     })
   }
 
@@ -153,34 +180,17 @@ class Dashboard extends Component {
 
     return (
       <div>
-        {/* To upload chapters pages press this button */}
-        {/* <button onClick={this.UploadToFirebase}>Upload</button> */}
-
-        {/* <Table striped bordered hover size="sm">
-          <tr>
-            <th style={Theading}>Name</th>
-            <th style={Theading}>Quantity</th>
-          </tr>
-          <tr>
-            <th style={th}>Manga </th>
-            <td style={td}>{AllData.length}</td>
-          </tr>
-          <tr>
-            <th style={th}>Chapter List</th>
-            <td style={td}>{chapterQuantity}</td>
-          </tr>
-        </Table> */}
         <div className='container'>
-        <h5 className="jumbutron">Mangas <span class="badge badge-primary">{AllData.length}</span></h5>
-        <hr />
-        <h5 className="jumbutron">Chapters <span class="badge badge-primary">{chapterQuantity}</span></h5>
-        <hr />
+          <h5 className="jumbutron">Mangas <span class="badge badge-primary">{AllData.length}</span></h5>
+          <hr />
+          <h5 className="jumbutron">Chapters <span class="badge badge-primary">{chapterQuantity}</span></h5>
+          <hr />
         </div>
 
         {/* <br/> */}
         <b>Search through Alias, Artist and Author</b>
-        <br/>
-        <br/>
+        <br />
+        <br />
 
         <Col sm="6">
           <Form.Control
@@ -194,11 +204,10 @@ class Dashboard extends Component {
 
 
         {dataList && <div>
-          {searchText &&  dataList.map((value, index) => {
-            return <span onClick={this.GoToDetails.bind(this, value.title)}>
+          {searchText && dataList.map((value, index) => {
+            return <span onClick={this.GoToDetails.bind(this, value)}>
               {value.alias.toLowerCase().includes(searchText.toLowerCase()) &&
-                <li style={ListContainer}>{value.alias}
-                  <span style={searchItem}>Alias</span></li>}
+                <li style={ListContainer}>{value.alias} <span style={searchItem}>Alias</span></li>}
 
               {value.artist.toLowerCase().includes(searchText.toLowerCase()) &&
                 <li style={ListContainer}>{value.artist} <span style={searchItem}>Artist</span></li>}
@@ -231,14 +240,14 @@ const ListContainer = {
   padding: '13px',
   border: "2px solid #0f0f0f0d",
   boxShadow: "1px 1px 1px 0px #888888",
-  cursor : 'pointer'
+  cursor: 'pointer'
 }
 
 const Theading = {
   textAlign: 'center',
   fontFamily: 'cursive',
   fontSize: '20px',
-  padding : '6px'
+  padding: '6px'
 }
 
 const th = {

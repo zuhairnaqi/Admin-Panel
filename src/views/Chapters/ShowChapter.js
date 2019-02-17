@@ -8,30 +8,31 @@ import { Button, Table } from 'react-bootstrap';
 import swal from 'sweetalert';
 
 var db = firebase.firestore();
-// Disable deprecated features
 db.settings({
     timestampsInSnapshots: true
 });
-// const CHAPTER_PAGES = "https://www.mangaeden.com/api/chapter/";
 
 class ShowChapter extends Component {
     constructor(props) {
         super(props);
         this.state = {
-            chptPages: ''
+            chptPages: '',
+            page: 0,
         }
     }
 
     componentDidMount() {
         const { id } = this.props.match.params;
-        var docId = id.slice(0, id.indexOf('-'));
-        db.collection("CHAPTER_PAGE").doc(docId).get()
+        var page = id.slice(0, 1);
+        var docId = id.slice(1, id.indexOf('-'));
+        console.log(page, docId);
+        db.collection(`CHAPTER_PAGE_${page}`).doc(docId).get()
             .then(doc => {
                 if (doc.exists) {
-                    console.log("Document data:", doc.data().chapt);
-                    const chptPages = doc.data().chapt;
+                    console.log("Document data:", doc.data().ChapterImages);
+                    const chptPages = doc.data().ChapterImages;
                     const chptId = doc.id;
-                    this.setState({ chptPages, chptId })
+                    this.setState({ chptPages, chptId, page })
                 } else {
                     console.log("No such document!");
                 }
@@ -43,34 +44,35 @@ class ShowChapter extends Component {
 
 
     DeleteDoc = async () => {
-        const { mangaDetail } = this.state;
         const { id } = this.props.match.params;
-        var docId = id.slice(0, id.indexOf('-'));
-        var prevId = id.slice(id.indexOf('-') + 1);
-        this.DeleteChapterFromMangaDetails(prevId, docId);
+        var page = id.slice(0, 1);
+        var docId = id.slice(1, id.indexOf('-'));
+        var mangaId = id.slice(id.indexOf('-') + 1);
+        this.DeleteChapterFromMangaDetails(mangaId, docId);
         this.AddDeleteChapterToFirebase(docId);
-        db.collection("CHAPTER_PAGE").doc(id).delete().then(function () {
+        db.collection(`CHAPTER_PAGE_${page}`).doc(docId).delete().then(() => {
             console.log("Document successfully deleted!");
             swal("Poof! You deleted manga successfully!", { icon: "success" });
-            this.props.history.push("/chapters");
+            this.props.history.push('/chapters');
 
         }).catch(function (error) {
             console.error("Error removing document: ", error);
         });
     }
 
-    DeleteChapterFromMangaDetails = (prevId, docId) => {
-        db.collection("MANGA_DETAIL").doc(prevId).get()
+    DeleteChapterFromMangaDetails = (mangaId, docId) => {
+        const { page } = this.state;
+
+        db.collection(`Page_${page}`).doc(mangaId).get()
             .then(doc => {
                 console.log(doc.data());
-                console.log(doc.data().chapters);
                 var chapters = doc.data().chapters;
                 chapters.filter((value, index) => {
                     if (value['3'] === docId) {
                         chapters.splice(index, 1);
                     }
                 })
-                db.collection("MANGA_DETAIL").doc(prevId).update({
+                db.collection(`Page_${page}`).doc(mangaId).update({
                     chapters
                 })
                     .then(() => {
@@ -90,11 +92,10 @@ class ShowChapter extends Component {
     }
 
     AddDeleteChapterToFirebase = async (id) => {
-        const { chptPages } = this.state;
-        db.collection("DELETED_IMAGES").doc(id).set({ chptPages })
+        const { chptPages, page } = this.state;
+        db.collection(`DELETED_IMAGES_${page}`).doc(id).set({ chptPages })
             .then(function () {
                 console.log("Document successfully written!");
-                this.props.history.push('/manga');
             })
             .catch(function (error) {
                 console.error("Error writing document: ", error);
@@ -104,13 +105,13 @@ class ShowChapter extends Component {
 
     render() {
         const { chptPages, chptId } = this.state;
-        const { id } = this.props.match.params
-        console.log(id);
+        const { id } = this.props.match.params;
+
         return (
             <div >
 
                 <div className="jumbotron">
-                    <h1 >Chapter Pages</h1>
+                    <h1 style={titleCss}>Chapter Pages</h1>
 
                     <Button bsStyle="success" style={edit_btn} onClick={() => {
                         swal({
@@ -134,7 +135,8 @@ class ShowChapter extends Component {
                         pathname: '/chapters/ShowChapter/EditChapter',
                         state: {
                             chptPages,
-                            chptId
+                            chptId,
+                            id
                         }
                     })}>Edit Images</Button>
                 </div>
@@ -187,7 +189,6 @@ const crouselCss = {
     width: "100%",
     margin: "0 auto",
     alignItems: 'center',
-    // height: "100%"
 }
 const edit_btn = {
     float: 'right',

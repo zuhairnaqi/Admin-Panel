@@ -23,8 +23,6 @@ const Users = React.lazy(() => import('./views/Users/Users'));
 const User = React.lazy(() => import('./views/Users/User'));
 const MangaDetails = React.lazy(() => import('./views/manga/ShowDetails'));
 const EditManga = React.lazy(() => import('./views/manga/Edit Manga/EditManga'));
-const Searching = React.lazy(() => import("./views/Searching") )
-// const GoToDetails = React.lazy(() => import("./views/Searching/GoToDetails/GoToDetails") )
 
 
 // https://github.com/ReactTraining/react-router/tree/master/packages/react-router-config
@@ -39,7 +37,7 @@ const routes = [
   { path: '/base/failedImages', name: 'Failed-images', component: Breadcrumbs },
   { path: '/base/failedChapters', name: 'Failed-chapters', component: Carousels },
   { path: '/manga', exact: true, name: 'Manga', component: Manga },
-  { path: '/manga/ShowDetails:id', exact: true, name: 'Manga-Details', component: MangaDetails },
+  { path: '/manga/ShowDetails', exact: true, name: 'Manga-Details', component: MangaDetails },
   { path: '/manga/ShowDetails/EditManga', exact: true, name: 'Edit-Manga-Details', component: EditManga },
   { path: '/icons', exact: true, name: 'Icons', component: CoreUIIcons },
   { path: '/icons/coreui-icons', name: 'CoreUI Icons', component: CoreUIIcons },
@@ -56,8 +54,6 @@ const routes = [
   { path: '/chapters/ShowChapter/EditChapter',exact: true, name: 'Edit Chapter', component: EditChapter },
   { path: '/users', exact: true,  name: 'Users', component: Users },
   { path: '/users/:id', exact: true, name: 'User Details', component: User },
-  // { path: '/searching', exact: true, name: 'Searching', component: Searching },
-  { path: '/searching-alias:id', exact: true, name: 'GoToDetails', component: Searching },
 ];
 
 export default routes;

@@ -116,22 +116,23 @@ class EditChapter extends Component {
 
     UpdateImage = () => {
         const { showButtons, imagePath, showIndex } = this.state;
-        const { chptPages, chptId } = this.props.location.state;
+        const { chptPages, chptId, id } = this.props.location.state;
+        var page = id.slice(0, 1);
         chptPages[showIndex] = imagePath;
         console.log(chptPages);
         console.log(this.props);
-        db.collection("CHAPTER_PAGE").doc(chptId).update({
-            chapt: chptPages
+        db.collection(`CHAPTER_PAGE_${page}`).doc(chptId).update({
+            ChapterImages: chptPages
         })
             .then(() => {
                 swal("Good job!", "Edited Profile successfully!!", "success");
-                this.props.history.push({
-                    pathname: '/chapters/ShowChapter/EditChapter',
-                    state: {
-                        chptPages,
-                        chptId
-                    }
-                });
+                this.props.history.push(`/chapters/ShowChapter${id}`)
+                    // pathname: '/chapters/ShowChapter/EditChapter',
+                    // state: {
+                    //     chptPages,
+                    //     chptId,
+                    //     id
+                    // }
             })
             .catch(error => {
                 console.error("Error updating document: ", error);
@@ -159,7 +160,7 @@ class EditChapter extends Component {
                                 <img src={value} style={imgCss} />}
 
                             {showButtons && showIndex === index &&
-                                <Col sm="10">
+                                <Col sm="5">
                                     <div className="custom-file" style={{
                                         marginTop: '10px'
                                     }}>
