@@ -20,7 +20,7 @@ class Charts extends Component {
 
   componentDidMount() {
     const { chapterList } = this.state;
-    db.collection(`Page_${page}`).orderBy("title").limit(20).get()
+    db.collection(`Page_${page}`).orderBy("title").get()
       .then(doc => {
         for (var i = 0; i < doc.docs.length; i++) {
           console.log(doc.docs[i].data());

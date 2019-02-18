@@ -24,7 +24,7 @@ class Manga extends Component {
 
     componentDidMount() {
         const { mangaList } = this.state;
-        db.collection(`Page_${page}`).orderBy("title").limit(15).get()
+        db.collection(`Page_${page}`).orderBy("title").get()
             .then(doc => {
                 console.log(doc.docs);
                 for (var i = 0; i < doc.docs.length; i++) {

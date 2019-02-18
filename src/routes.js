@@ -34,7 +34,7 @@ const routes = [
   { path: '/theme/typography', name: 'Typography', component: Typography },
   { path: '/base', exact: true, name: 'Base', component: Cards },
   { path: '/base/failedMangas', name: 'Failed-mangas', component: Cards },
-  { path: '/base/failedImages', name: 'Failed-images', component: Breadcrumbs },
+  { path: '/base/checkforupdates', name: 'Check-For-Updates', component: Breadcrumbs },
   { path: '/base/failedChapters', name: 'Failed-chapters', component: Carousels },
   { path: '/manga', exact: true, name: 'Manga', component: Manga },
   { path: '/manga/ShowDetails', exact: true, name: 'Manga-Details', component: MangaDetails },

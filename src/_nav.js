@@ -42,25 +42,25 @@ export default {
       },
     },
     {
-      name: 'Dashboard',
+      name: 'Updates',
       url: '/base',
       icon: 'icon-puzzle',
       children: [
         {
-          name: 'Failed Images',
-          url: '/base/failedImages',
-          icon: 'icon-puzzle',
-        },
-        {
-          name: 'Failed Mangas',
-          url: '/base/failedMangas',
-          icon: 'icon-puzzle',
-        },
-        {
-          name: 'Failed Chapters',
-          url: '/base/failedChapters',
+          name: 'Check for updates',
+          url: '/base/checkforupdates',
           icon: 'icon-puzzle',
         }
+        // {
+        //   name: 'Failed Mangas',
+        //   url: '/base/failedMangas',
+        //   icon: 'icon-puzzle',
+        // },
+        // {
+        //   name: 'Failed Chapters',
+        //   url: '/base/failedChapters',
+        //   icon: 'icon-puzzle',
+        // }
       ],
     },
     {
