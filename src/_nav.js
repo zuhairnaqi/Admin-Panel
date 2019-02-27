@@ -50,12 +50,12 @@ export default {
           name: 'Check for updates',
           url: '/base/checkforupdates',
           icon: 'icon-puzzle',
-        }
-        // {
-        //   name: 'Failed Mangas',
-        //   url: '/base/failedMangas',
-        //   icon: 'icon-puzzle',
-        // },
+        },
+        {
+          name: 'Failed Mangas',
+          url: '/base/failedMangas',
+          icon: 'icon-puzzle',
+        },
         // {
         //   name: 'Failed Chapters',
         //   url: '/base/failedChapters',

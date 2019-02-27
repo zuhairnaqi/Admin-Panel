@@ -30,7 +30,9 @@ class Manga extends Component {
                 for (var i = 0; i < doc.docs.length; i++) {
                     var data = doc.docs[i].data();
                     data.docId = doc.docs[i].id;
-                    mangaList.push(data);
+                    if(data.image) {
+                        mangaList.push(data);
+                    }
                 }
                 this.setState({ mangaList });
             }).catch(function (error) {

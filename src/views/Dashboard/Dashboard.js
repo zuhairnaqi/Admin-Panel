@@ -25,57 +25,8 @@ class Dashboard extends Component {
     }
   }
 
-
-  // FOR UPLOAD Chapter Images TO FIREBASE 
-  // componentDidMount() {
-  //   const { chp } = this.state;
-  //   db.collection("MANGA_DETAIL").orderBy("alias").get()
-  //     .then(doc => {
-  //       // if (doc.exists) {
-  //         for (var i = 0; i < doc.docs.length; i++) {
-  //           var data = doc.docs[i].data();
-  //           for (let i = 0; i < data.chapters_len; i++) {
-  //             var id = data.chapters[i][3];
-  //             chp.push(id);
-  //           }
-  //         }
-  //         this.setState({ chp })
-  //       // } else {
-  //       //   console.log("Document is empty");
-  //       // }
-  //     }).catch(function (error) {
-  //       console.log("Error getting document:", error);
-  //     });
-  // }
-
-  // UploadToFirebase = async() => {
-  //   const { chp } = this.state;
-  //   for (let i = 998; i < chp.length; i++) {
-  //       // const element = chapterList[i].chapters[j][3];
-  //       await new Promise(resolve => setTimeout(resolve, 1200));
-  //       const element = chp[i];
-  //       fetch(`${CHAPTERLIST}${element}/`)
-  //         .then(res => res.json())
-  //         .then(value => {
-  //           var chapt = [];
-  //           for (let k = 0; k < value.images.length; k++) {
-  //             const img = value.images[k][1];
-  //             chapt.push(img);
-  //           }
-  //           db.collection("CHAPTER_PAGE").doc(element).set({chapt} , { merge : true })
-  //             .then(function () {
-  //               console.log("Document successfully written! page number " + i);
-  //             })
-  //             .catch(function (error) {
-  //               console.error("Error writing document: ", error);
-  //             });
-  //         });
-  //   }
-  // }
-
-
   componentDidMount() {
-    this.FetchDataFromDatabase();
+    // this.FetchDataFromDatabase();
   }
 
   FetchDataFromDatabase = async () => {
@@ -153,9 +104,9 @@ class Dashboard extends Component {
     this.setState({
       searchText: value,
       dataList: AllData.filter(data => {
-        return (data.title.toLowerCase().includes(value.toLowerCase()) ||
-          data.artist.toLowerCase().includes(value.toLowerCase()) ||
-          data.author.toLowerCase().includes(value.toLowerCase()))
+        return (data.title.toLowerCase().slice(0,value.length) === value.toLowerCase() ||
+          data.artist.toLowerCase().slice(0,value.length) === value.toLowerCase() ||
+          data.author.toLowerCase().slice(0,value.length) === value.toLowerCase())
       })
     });
   }
